@@ -68,12 +68,46 @@
 				$response[] = $this->getRelationships();
 				$response[] = $this->getNodes();
 			}
+			else if ($type === "REINITIALIZE") {
+				$response[] = "REINITIALIZED";
+				$this->deleteEverything();
+
+				$mtl = $this->createNode("Montréal", 232, 946);
+				$qc = $this->createNode("Québec", 332, 865);
+				$tr = $this->createNode("Trois-Rivières", 283, 892);
+				$sag = $this->createNode("Saguenay", 340, 800);
+				$gat = $this->createNode("Gatineau", 149, 934);
+				$gas = $this->createNode("Gaspé", 605, 741);
+				$rim = $this->createNode("Rimouski", 464, 768);
+				$jer = $this->createNode("St-Jérôme", 214, 889);
+				$lau = $this->createNode("Mont-Laurier", 173, 860);
+				$she = $this->createNode("Sherbrooke", 314, 942);
+
+				$this->addRelationship($mtl, 141, $tr);
+				$this->addRelationship($qc, 126, $tr);
+				$this->addRelationship($mtl, 155, $she);
+				$this->addRelationship($qc, 235, $she);
+				$this->addRelationship($mtl, 203, $gat);
+				$this->addRelationship($mtl, 59, $jer);
+				$this->addRelationship($gat, 165, $jer);
+				$this->addRelationship($jer, 181, $lau);
+				$this->addRelationship($gat, 165, $lau);
+				$this->addRelationship($qc, 210, $sag);
+				$this->addRelationship($qc, 316, $rim);
+				$this->addRelationship($rim, 380, $gas);
+			}
 			else {
 				$response = "INVALID_EVENT";
 			}
 
-
 			return $response;
+		}
+
+		private function deleteEverything() {			
+			$query = new Everyman\Neo4j\Cypher\Query($this->neo4jClient, "MATCH (n:City)-[r]->(p:City) DELETE r");
+			$result = $query->getResultSet();
+			$query = new Everyman\Neo4j\Cypher\Query($this->neo4jClient, "MATCH (n:City) DELETE n");
+			$result = $query->getResultSet();
 		}
 
 		private function createNode($name, $x, $y) {
@@ -142,7 +176,7 @@
 			$relation = $this->neo4jClient->makeRelationship();
 			$relation->setStartNode($node1)
 					 ->setEndNode($node2)
-					 ->setType($distance)
+					 ->setType($distance . "")
 					 ->save();
 		}
 

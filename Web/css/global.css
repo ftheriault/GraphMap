@@ -5,10 +5,41 @@
 
 html {
 	background-color: #99999f;	
+	color: #333;
+}
+
+h1 {
+	font-size: 16px;
+	margin-bottom: 5px;
+}
+
+p {
+	margin-bottom: 10px;
+}
+
+ul {
+	list-style-type: none;
+}
+
+ul li {
+	display: inline;
+}
+
+.description {
+	width:900px;
+	margin-left:-450px;
+	position: absolute;
+	left:50%;
+	top:20px;
+	background-color: white;
+	border-radius: 3px;
+	border:3px solid black;
+	padding:8px;
+	z-index: 2;
 }
 
 .canvas-container {
 	width:900px;
-	margin:30px auto;
+	margin:60px auto;
 	position: relative;
 }

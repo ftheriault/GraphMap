@@ -10,6 +10,17 @@
 	<link rel="stylesheet" href="css/global.css">
 </head>
 <body>
+	<div class="description">
+		<h1>Graph Map</h1>
+		<p>En cliquant, vous pouvez ajouter des villes ainsi que des liaisons entre celles-ci. Pour supprimer une liaison ou une ville, utilisez le bouton droit de la souris.</p>
+		<div>
+			<ul>
+				<li>[<a href="javascript:void(0)" onclick="reinitialize()">Réinitialiser</a>] </li>
+				<li>[<a href="javascript:void(0)" onclick="hideCityNames(this)">Cacher le nom des villes</a>]</li>
+				<li>[<a href="javascript:void(0)" onclick="switchMode(this)">Mode : <strong>insertion</strong></a>]</li>
+			</ul>
+		</div>
+	</div>
 	<div class="canvas-container">
 		<canvas width="900" height="970" id="canvas"></canvas>
 	</div>

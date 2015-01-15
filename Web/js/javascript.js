@@ -5,9 +5,20 @@ background.src = "images/map.png";
 
 var spriteList = [];
 var selectedSprite = null;
+var mousePos = {x : 0, y : 0};
+var showCityNames = true;
+var insertMode = true;
 
 $(function() {
 	document.getElementById("canvas").oncontextmenu = function() {return false;};
+
+
+	$("canvas").mousemove(function (e) {
+		var x = e.pageX - $("canvas").offset().left;
+		var y = e.pageY - $("canvas").offset().top;
+		mousePos.x = x;
+		mousePos.y = y;
+	});
 	
 	$("canvas").mousedown(function (e) {
 		var x = e.pageX - $("canvas").offset().left;
@@ -94,6 +105,34 @@ $(function() {
 	sendEvent({ type : "REFRESH" });
 });
 
+function reinitialize() {
+	if (confirm("Réinitialiser ?")) {
+		sendEvent({ type : "REINITIALIZE" });		
+	}
+}
+
+function hideCityNames(elem) {
+	showCityNames = !showCityNames;
+
+	if (showCityNames) {
+		elem.innerHTML = "Cacher le nom des villes";
+	}
+	else {
+		elem.innerHTML = "Afficher le nom des villes";	
+	}
+}
+
+function switchMode(elem) {
+	insertMode = !insertMode;
+
+	if (insertMode) {
+		elem.innerHTML = "Mode : <strong>insertion</strong>";
+	}
+	else {
+		elem.innerHTML = "Mode : <strong>calcul de trajets</strong>";
+	}
+}
+
 function step(timestamp) {
 	ctx.clearRect(0, 0, 900, 970);
 
@@ -103,6 +142,15 @@ function step(timestamp) {
 
 	for (var i = 0; i < spriteList.length; i++) {
 		spriteList[i].tick();
+	}
+
+	if (mousePos.x != 0) {	
+		var text = parseInt(mousePos.x) + ", " + parseInt(mousePos.y);
+		ctx.strokeStyle = 'black';	
+		ctx.fillStyle = '#fff';	
+		ctx.font = "10px Arial";
+	  	ctx.strokeText(text, 31, 950 + 11);
+	  	ctx.fillText(text, 30, 950 + 10);
 	}
 
 	window.requestAnimationFrame(step);
@@ -133,7 +181,7 @@ function sendEvent(data) {
 				spriteList.push(new CitySprite(msg[2][i].x, msg[2][i].y, msg[2][i].name));					
 			}
 		}
-		else if (msg[0] == "REMOVED" || msg[0] == "LINK_ADDED") {
+		else if (msg[0] == "REMOVED" || msg[0] == "LINK_ADDED" || msg[0]== "REINITIALIZED") {
 			sendEvent({type : "REFRESH"});
 		}
 	});

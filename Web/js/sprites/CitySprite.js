@@ -1,9 +1,9 @@
 function CitySprite(x, y, name) {
 	this.x = x;
 	this.y = y;
-	this.name = name
+	this.name = name;
 
-	this.radius = 16;
+	this.radius = 10;
 	this.selected = false;
 }
 
@@ -13,7 +13,7 @@ CitySprite.prototype.tick = function () {
 	ctx.restore();
 
 	if (this.selected) {
-		ctx.fillStyle = '#afa';
+		ctx.fillStyle = '#4d4';
 	}
 	else {
 		ctx.fillStyle = '#ddf';	
@@ -24,6 +24,15 @@ CitySprite.prototype.tick = function () {
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = 'black';
 	ctx.stroke();
+
+	if (showCityNames) {
+		ctx.strokeStyle = 'black';	
+		ctx.fillStyle = '#ddd';	
+		ctx.font = "16px Arial";
+		ctx.textAlign = "center";
+	  	ctx.strokeText(this.name, this.x + 1, this.y - 19);
+	  	ctx.fillText(this.name, this.x, this.y - 20);
+	  }
 }
 
 CitySprite.prototype.setSelected = function (selected) {

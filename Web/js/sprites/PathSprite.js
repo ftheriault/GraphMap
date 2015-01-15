@@ -11,8 +11,8 @@ function PathSprite(x1, y1, x2, y2, distance, id) {
 }
 
 PathSprite.prototype.tick = function () {
-	ctx.lineWidth = 2;
-	ctx.strokeStyle = '#dfd';	
+	ctx.lineWidth = 3;
+	ctx.strokeStyle = '#1f1';	
 	
 	ctx.beginPath();
 	ctx.moveTo(this.x1, this.y1);
@@ -23,7 +23,7 @@ PathSprite.prototype.tick = function () {
 
 	ctx.strokeStyle = 'black';	
 	ctx.fillStyle = '#ddd';	
-	ctx.font = "20px Arial";
+	ctx.font = "14px Arial";
 	ctx.textAlign = "center";
   	ctx.strokeText(this.distance, this.centerX + 1, this.centerY + 11);
   	ctx.fillText(this.distance, this.centerX, this.centerY + 10);
