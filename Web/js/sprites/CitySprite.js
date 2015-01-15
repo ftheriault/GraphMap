@@ -26,13 +26,13 @@ CitySprite.prototype.tick = function () {
 	ctx.stroke();
 
 	if (showCityNames) {
-		ctx.strokeStyle = 'black';	
-		ctx.fillStyle = '#ddd';	
 		ctx.font = "16px Arial";
 		ctx.textAlign = "center";
-	  	ctx.strokeText(this.name, this.x + 1, this.y - 19);
+		ctx.fillStyle = 'black';	
+	  	ctx.fillText(this.name, this.x + 1, this.y - 19);
+		ctx.fillStyle = '#ddd';	
 	  	ctx.fillText(this.name, this.x, this.y - 20);
-	  }
+	}
 }
 
 CitySprite.prototype.setSelected = function (selected) {

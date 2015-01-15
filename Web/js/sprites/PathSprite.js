@@ -28,11 +28,11 @@ PathSprite.prototype.tick = function () {
 
 	ctx.lineWidth = 1;
 
-	ctx.strokeStyle = 'black';	
-	ctx.fillStyle = '#ddd';	
+	ctx.fillStyle = 'black';	
 	ctx.font = "14px Arial";
 	ctx.textAlign = "center";
-  	ctx.strokeText(this.distance, this.centerX + 1, this.centerY + 11);
+  	ctx.fillText(this.distance, this.centerX + 1, this.centerY + 11);
+	ctx.fillStyle = '#ddd';	
   	ctx.fillText(this.distance, this.centerX, this.centerY + 10);
 }
 

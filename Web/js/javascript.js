@@ -166,10 +166,10 @@ function step(timestamp) {
 	}
 
 	if (travelDistance != null) {
-		ctx.strokeStyle = 'black';	
-		ctx.fillStyle = '#fff';	
+		ctx.fillStyle = 'black';	
 		ctx.font = "40px Arial";
-	  	ctx.strokeText(travelDistance + "km", 450, 950/2 + 11);
+	  	ctx.fillText(travelDistance + "km", 450, 950/2 + 11);
+		ctx.fillStyle = '#fff';	
 	  	ctx.fillText(travelDistance + "km", 450, 950/2 + 10);
 
 	}
