@@ -1,0 +1,14 @@
+* {
+	margin:0;
+	padding:0;
+}
+
+html {
+	background-color: #99999f;	
+}
+
+.canvas-container {
+	width:900px;
+	margin:30px auto;
+	position: relative;
+}
