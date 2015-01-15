@@ -28,7 +28,7 @@ ul li {
 .description {
 	width:900px;
 	margin-left:-450px;
-	position: absolute;
+	position: fixed;
 	left:50%;
 	top:20px;
 	background-color: white;
