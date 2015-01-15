@@ -77,7 +77,7 @@ $(function() {
 
 				var name = prompt("Enter name of city");
 
-				if (name != null) {
+				if (name != null && name.trim().length > 0) {
 					sendEvent({
 						type : "ADD",
 						x : x,
