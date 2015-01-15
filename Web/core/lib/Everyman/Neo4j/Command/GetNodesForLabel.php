@@ -1,5 +1,6 @@
 <?php
 namespace Everyman\Neo4j\Command;
+
 use Everyman\Neo4j\Command,
 	Everyman\Neo4j\Client,
 	Everyman\Neo4j\Label,
@@ -70,7 +71,12 @@ class GetNodesForLabel extends Command
 			}
 
 			$propertyName = rawurlencode($this->propertyName);
-			$propertyValue = rawurlencode('"'.$this->propertyValue.'"');
+
+			if (is_numeric($this->propertyValue)) {
+				$propertyValue = rawurlencode($this->propertyValue);
+			} else {
+				$propertyValue = rawurlencode('"'.$this->propertyValue.'"');
+			}
 
 			$path .= "?{$propertyName}={$propertyValue}";
 		}
@@ -95,4 +101,3 @@ class GetNodesForLabel extends Command
 		return new Row($this->client, array_keys($data), $data);
 	}
 }
-

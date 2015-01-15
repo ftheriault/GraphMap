@@ -8,6 +8,8 @@ var selectedSprite = null;
 var mousePos = {x : 0, y : 0};
 var showCityNames = true;
 var insertMode = true;
+var clearPathOnNextClick = false;
+var travelDistance = null;
 
 $(function() {
 	document.getElementById("canvas").oncontextmenu = function() {return false;};
@@ -39,40 +41,50 @@ $(function() {
 			}
 		}	
 
+		if (clearPathOnNextClick) {
+			clearPathOnNextClick = false;
+			travelDistance = null;
+			clearPath();
+		}
+
 		if (e.which == 3) {
 			if (selectedSprite != null) {
 				selectedSprite.setSelected(false);
 				selectedSprite = null;
 			}
 
-			if (cityClicked != null) {
-				sendEvent({
-					type : "REMOVE",
-					name : cityClicked.name
-				});
-			}
-			else if (pathClicked != null) {
-				sendEvent({
-					type : "REMOVE_LINK",
-					id : pathClicked.id
-				});
+			if (insertMode) {
+				if (cityClicked != null) {
+					sendEvent({
+						type : "REMOVE",
+						name : cityClicked.name
+					});
+				}
+				else if (pathClicked != null) {
+					sendEvent({
+						type : "REMOVE_LINK",
+						id : pathClicked.id
+					});
+				}
 			}
 		}
 		else if (cityClicked == null)  {
-			if (selectedSprite != null) {
-				selectedSprite.setSelected(false);
-				selectedSprite = null;
-			}
+			if (insertMode) {
+				if (selectedSprite != null) {
+					selectedSprite.setSelected(false);
+					selectedSprite = null;
+				}
 
-			var name = prompt("Enter name of city");
+				var name = prompt("Enter name of city");
 
-			if (name != null) {
-				sendEvent({
-					type : "ADD",
-					x : x,
-					y : y,
-					name : name
-				});
+				if (name != null) {
+					sendEvent({
+						type : "ADD",
+						x : x,
+						y : y,
+						name : name
+					});
+				}
 			}
 		}
 		else if (selectedSprite == cityClicked) {
@@ -84,17 +96,26 @@ $(function() {
 			selectedSprite.setSelected(true);
 		}
 		else if (cityClicked != null) {
-			var km = prompt("Enter distance (in km)");
+			if (insertMode) {
+				var km = prompt("Enter distance (in km)");
 
-			if (km != null && !isNaN(km)) {
+				if (km != null && !isNaN(km)) {
+					sendEvent({
+						type : "ADD_LINK",
+						name1 : selectedSprite.name,
+						name2 : cityClicked.name,
+						distance : km
+					});
+
+					selectedSprite = null;
+				}
+			}
+			else {
 				sendEvent({
-					type : "ADD_LINK",
+					type : "CALCULATE_DISTANCE",
 					name1 : selectedSprite.name,
-					name2 : cityClicked.name,
-					distance : km
+					name2 : cityClicked.name
 				});
-
-				selectedSprite = null;
 			}
 		}
 	});
@@ -144,6 +165,15 @@ function step(timestamp) {
 		spriteList[i].tick();
 	}
 
+	if (travelDistance != null) {
+		ctx.strokeStyle = 'black';	
+		ctx.fillStyle = '#fff';	
+		ctx.font = "40px Arial";
+	  	ctx.strokeText(travelDistance + "km", 450, 950/2 + 11);
+	  	ctx.fillText(travelDistance + "km", 450, 950/2 + 10);
+
+	}
+
 	if (mousePos.x != 0) {	
 		var text = parseInt(mousePos.x) + ", " + parseInt(mousePos.y);
 		ctx.strokeStyle = 'black';	
@@ -154,6 +184,14 @@ function step(timestamp) {
 	}
 
 	window.requestAnimationFrame(step);
+}
+
+function clearPath() {
+	for (var i = 0; i < spriteList.length; i++) {
+		if (spriteList[i].distance != undefined) {
+			spriteList[i].setInPath(false);
+		}
+	}
 }
 
 function sendEvent(data) {
@@ -183,6 +221,20 @@ function sendEvent(data) {
 		}
 		else if (msg[0] == "REMOVED" || msg[0] == "LINK_ADDED" || msg[0]== "REINITIALIZED") {
 			sendEvent({type : "REFRESH"});
+		}
+		else if (msg[0] == "CALCULATION_DONE") {
+			travelDistance = msg[1];
+			clearPath();
+
+			for (var i = 0; i < spriteList.length; i++) {
+				if (spriteList[i].distance != undefined) {
+					if (msg[2].indexOf(spriteList[i].id) != -1) {
+						spriteList[i].setInPath(true);
+					}
+				}
+			}
+
+			clearPathOnNextClick = true;
 		}
 	});
 }

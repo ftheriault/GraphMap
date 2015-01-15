@@ -13,9 +13,10 @@ class Client
 
 	const RefNodeId = 0;
 
-	const CapabilityCypher  = 'cypher';
-	const CapabilityGremlin = 'gremlin';
-	const CapabilityLabel   = 'label';
+	const CapabilityCypher        = 'cypher';
+	const CapabilityGremlin       = 'gremlin';
+	const CapabilityLabel         = 'label';
+	const CapabilityTransactions  = 'transactions';
 
 	protected $transport = null;
 	protected $entityMapper = null;
@@ -24,7 +25,13 @@ class Client
 	protected $serverInfo = null;
 	protected $openBatch = null;
 
+	/**
+	 * @var callable The node factory
+	 */
 	protected $nodeFactory = null;
+	/**
+	 * @var callable The relation factory
+	 */
 	protected $relFactory = null;
 
 	/**
@@ -38,13 +45,13 @@ class Client
 		try {
 			if ($transport === null) {
 				$transport = new Transport\Curl();
-			} elseif (is_string($transport)) {
+			} else if (is_string($transport)) {
 				$transport = new Transport\Curl($transport, $port);
 			}
 		} catch (Exception $e) {
 			if ($transport === null) {
 				$transport = new Transport\Stream();
-			} elseif (is_string($transport)) {
+			} else if (is_string($transport)) {
 				$transport = new Transport\Stream($transport, $port);
 			}
 		}
@@ -64,13 +71,27 @@ class Client
 	 * Add a set of labels to a node
 	 *
 	 * @param Node  $node
-	 * @param array $labels list of Label objects to add
-	 * @return array of Label objects; the entire list of labels on the given node
+	 * @param Label[] $labels list of Label objects to add
+	 * @return Label[] of Label objects; the entire list of labels on the given node
 	 *   including the ones just added
 	 */
 	public function addLabels(Node $node, $labels)
 	{
 		$command = new Command\AddLabels($this, $node, $labels);
+		return $this->runCommand($command);
+	}
+
+	/**
+	 * Add statements to a transaction, and optionally commit the transaction
+	 *
+	 * @param Transaction $transaction
+	 * @param array $statements an array of Cypher\Query objects
+	 * @param boolean $commit should this transaction be committed on this request?
+	 * @return Query\ResultSet
+	 */
+	public function addStatementsToTransaction(Transaction $transaction, $statements=array(), $commit=false)
+	{
+		$command = new Command\AddStatementsToTransaction($this, $transaction, $statements, $commit);
 		return $this->runCommand($command);
 	}
 
@@ -94,9 +115,20 @@ class Client
 	}
 
 	/**
+	 * Begin a Cypher transaction
+	 *
+	 * @return Transaction
+	 */
+	public function beginTransaction()
+	{
+		return new Transaction($this);
+	}
+
+	/**
 	 * Commit a batch of operations
 	 *
 	 * @param Batch $batch
+	 * @throws Exception
 	 * @return boolean true on success
 	 */
 	public function commitBatch(Batch $batch=null)
@@ -287,6 +319,7 @@ class Client
 	 *
 	 * @param integer $id
 	 * @param boolean $force
+	 * @throws Exception
 	 * @return Node
 	 */
 	public function getNode($id, $force=false)
@@ -335,6 +368,7 @@ class Client
 	 * If a property and value are given, only return
 	 * nodes where the given property equals the value
 	 *
+	 * @param Label  $label
 	 * @param string $propertyName
 	 * @param mixed  $propertyValue
 	 * @return Query\Row
@@ -376,6 +410,7 @@ class Client
 	 *
 	 * @param integer $id
 	 * @param boolean $force
+	 * @throws Exception
 	 * @return Relationship
 	 */
 	public function getRelationship($id, $force=false)
@@ -452,10 +487,11 @@ class Client
 		$info = $this->getServerInfo();
 
 		switch ($capability) {
-			case self::CapabilityLabel :
+			case self::CapabilityLabel:
+			case self::CapabilityTransactions:
 				return $info['version']['major'] > 1;
 
-			case self::CapabilityCypher :
+			case self::CapabilityCypher:
 				if (isset($info['cypher'])) {
 					return $info['cypher'];
 				} else if (isset($info['extensions']['CypherPlugin']['execute_query'])) {
@@ -463,7 +499,7 @@ class Client
 				}
 				return false;
 
-			case self::CapabilityGremlin :
+			case self::CapabilityGremlin:
 				if (isset($info['extensions']['GremlinPlugin']['execute_script'])) {
 					return $info['extensions']['GremlinPlugin']['execute_script'];
 				}
@@ -533,6 +569,7 @@ class Client
 	 * Create a new node object bound to this client
 	 *
 	 * @param array $properties
+	 * @throws Exception
 	 * @return Node
 	 */
 	public function makeNode($properties=array())
@@ -549,6 +586,7 @@ class Client
 	 * Create a new relationship object bound to this client
 	 *
 	 * @param array $properties
+	 * @throws Exception
 	 * @return Relationship
 	 */
 	public function makeRelationship($properties=array())
@@ -572,6 +610,18 @@ class Client
 	public function queryIndex(Index $index, $query)
 	{
 		$command = new Command\QueryIndex($this, $index, $query);
+		return $this->runCommand($command);
+	}
+
+	/**
+	 * Rollback the transaction
+	 *
+	 * @param Transaction $transaction
+	 * @return mixed
+	 */
+	public function rollbackTransaction(Transaction $transaction)
+	{
+		$command = new Command\RollbackTransaction($this, $transaction);
 		return $this->runCommand($command);
 	}
 
@@ -705,6 +755,7 @@ class Client
 	 * should be returned, but are not set by the factory function.
 	 *
 	 * @param callable $factory
+	 * @throws Exception
 	 * @return Client
 	 */
 	public function setNodeFactory($factory)
@@ -726,6 +777,7 @@ class Client
 	 * should be returned, but are not set by the factory function.
 	 *
 	 * @param callable $factory
+	 * @throws Exception
 	 * @return Client
 	 */
 	public function setRelationshipFactory($factory)

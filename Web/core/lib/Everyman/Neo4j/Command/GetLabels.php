@@ -1,5 +1,6 @@
 <?php
 namespace Everyman\Neo4j\Command;
+
 use Everyman\Neo4j\Command,
 	Everyman\Neo4j\Client,
 	Everyman\Neo4j\Node;
@@ -57,7 +58,7 @@ class GetLabels extends Command
 		$path = "/labels";
 		if ($this->node) {
 			$id = $this->node->getId();
-			if (!$id) {
+			if (!is_numeric($id)) {
 				throw new \InvalidArgumentException("Node given with no id");
 			}
 
@@ -86,4 +87,3 @@ class GetLabels extends Command
 		return $labels;
 	}
 }
-

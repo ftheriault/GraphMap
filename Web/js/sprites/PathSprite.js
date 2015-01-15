@@ -5,14 +5,21 @@ function PathSprite(x1, y1, x2, y2, distance, id) {
 	this.y2 = y2;
 	this.id = id;
 	this.distance = distance;
+	this.inPath = false;
 
 	this.centerX = (parseInt(this.x1) + parseInt(this.x2))/2; 
 	this.centerY = (parseInt(this.y1) + parseInt(this.y2))/2;
 }
 
 PathSprite.prototype.tick = function () {
-	ctx.lineWidth = 3;
-	ctx.strokeStyle = '#1f1';	
+	if (!this.inPath) {
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = '#1f1';	
+	}
+	else {
+		ctx.lineWidth = 5;
+		ctx.strokeStyle = '#f0f';		
+	}
 	
 	ctx.beginPath();
 	ctx.moveTo(this.x1, this.y1);
@@ -27,6 +34,10 @@ PathSprite.prototype.tick = function () {
 	ctx.textAlign = "center";
   	ctx.strokeText(this.distance, this.centerX + 1, this.centerY + 11);
   	ctx.fillText(this.distance, this.centerX, this.centerY + 10);
+}
+
+PathSprite.prototype.setInPath = function (inPath) {
+	this.inPath = inPath;
 }
 
 PathSprite.prototype.clicked = function (x, y) {

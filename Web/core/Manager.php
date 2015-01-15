@@ -68,6 +68,13 @@
 				$response[] = $this->getRelationships();
 				$response[] = $this->getNodes();
 			}
+			else if ($type === "CALCULATE_DISTANCE") {
+				$response[] = "CALCULATION_DONE";
+				$tmp = $this->getPath($_POST["name1"], $_POST["name2"]);
+				$response[] = $tmp[0];
+				$response[] = $tmp[1];
+
+			}
 			else if ($type === "REINITIALIZE") {
 				$response[] = "REINITIALIZED";
 				$this->deleteEverything();
@@ -101,6 +108,29 @@
 			}
 
 			return $response;
+		}
+
+		private function getPath($city1, $city2) {
+			$result = array();
+			$result[0] = 0;
+			$result[1] = array();
+
+			$paths = $this->getNode($city1)->findPathsTo($this->getNode($city2))
+		    ->setAlgorithm(Everyman\Neo4j\PathFinder::AlgoDijkstra)
+		    ->setCostProperty('distance')
+		    ->setMaxDepth(15)
+		    ->getPaths();
+
+		    if (sizeof($paths) > 0) {
+		    	$paths[0]->setContext(Everyman\Neo4j\Path::ContextRelationship);
+
+			    foreach ($paths[0] as $j => $rel) {
+			    	$result[1][] = $rel->getId();
+			    	$result[0] = $result[0] + $rel->getProperty("distance");
+			    }
+			}
+
+			return $result;
 		}
 
 		private function deleteEverything() {			
@@ -176,7 +206,8 @@
 			$relation = $this->neo4jClient->makeRelationship();
 			$relation->setStartNode($node1)
 					 ->setEndNode($node2)
-					 ->setType($distance . "")
+					 ->setType("PATH")
+					 ->setProperty("distance", $distance)
 					 ->save();
 		}
 
@@ -218,7 +249,7 @@
 					"city1_y" => $r["n"]->getProperty("y"),
 					"city2_x" => $r["p"]->getProperty("x"),
 					"city2_y" => $r["p"]->getProperty("y"),
-					"distance" => $r["r"]->getType(),
+					"distance" => $r["r"]->getProperty("distance"),
 					"id" => $r["r"]->getId(),
 				);
 				$data[] = $elem;
