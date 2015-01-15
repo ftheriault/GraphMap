@@ -12,50 +12,79 @@ $(function() {
 	$("canvas").mousedown(function (e) {
 		var x = e.pageX - $("canvas").offset().left;
 		var y = e.pageY - $("canvas").offset().top;
-		var spriteClicked = null;
+		var cityClicked = null;
+		var pathClicked = null;
 
 		for (var i = 0; i < spriteList.length; i++) {
 			if (spriteList[i].clicked(x, y)) {
-				spriteClicked = spriteList[i];
+				if (spriteList[i].name != undefined) {
+					cityClicked = spriteList[i];
+				}
+				else if (spriteList[i].distance != undefined) {
+					pathClicked = spriteList[i];
+				}
+
 				break;
 			}
 		}	
 
-		if (e.which == 3 && spriteClicked != null) {
+		if (e.which == 3) {
 			if (selectedSprite != null) {
 				selectedSprite.setSelected(false);
 				selectedSprite = null;
 			}
 
-			sendEvent({
-				type : "REMOVE",
-				name : spriteClicked.name
-			});
+			if (cityClicked != null) {
+				sendEvent({
+					type : "REMOVE",
+					name : cityClicked.name
+				});
+			}
+			else if (pathClicked != null) {
+				sendEvent({
+					type : "REMOVE_LINK",
+					id : pathClicked.id
+				});
+			}
 		}
-		else if (spriteClicked == null)  {
+		else if (cityClicked == null)  {
 			if (selectedSprite != null) {
 				selectedSprite.setSelected(false);
 				selectedSprite = null;
 			}
 
 			var name = prompt("Enter name of city");
-			sendEvent({
-				type : "ADD",
-				x : x,
-				y : y,
-				name : name
-			});
+
+			if (name != null) {
+				sendEvent({
+					type : "ADD",
+					x : x,
+					y : y,
+					name : name
+				});
+			}
 		}
-		else if (selectedSprite == spriteClicked) {
+		else if (selectedSprite == cityClicked) {
 			selectedSprite.setSelected(false);
 			selectedSprite = null;
 		}
 		else if (selectedSprite == null) {
-			selectedSprite = spriteClicked;
+			selectedSprite = cityClicked;
 			selectedSprite.setSelected(true);
 		}
-		else {
-			//add link
+		else if (cityClicked != null) {
+			var km = prompt("Enter distance (in km)");
+
+			if (km != null && !isNaN(km)) {
+				sendEvent({
+					type : "ADD_LINK",
+					name1 : selectedSprite.name,
+					name2 : cityClicked.name,
+					distance : km
+				});
+
+				selectedSprite = null;
+			}
 		}
 	});
 
@@ -93,12 +122,18 @@ function sendEvent(data) {
 		}
 		else if (msg[0] == "REFRESHED") {
 			spriteList = [];
-			
+
 			for (var i = 0; i < msg[1].length; i++) {
-				spriteList.push(new CitySprite(msg[1][i].x, msg[1][i].y, msg[1][i].name));					
+				spriteList.push(new PathSprite(msg[1][i].city1_x, msg[1][i].city1_y, 
+											   msg[1][i].city2_x, msg[1][i].city2_y,
+											   msg[1][i].distance, msg[1][i].id));					
+			}
+
+			for (var i = 0; i < msg[2].length; i++) {
+				spriteList.push(new CitySprite(msg[2][i].x, msg[2][i].y, msg[2][i].name));					
 			}
 		}
-		else if (msg[0] == "REMOVED") {
+		else if (msg[0] == "REMOVED" || msg[0] == "LINK_ADDED") {
 			sendEvent({type : "REFRESH"});
 		}
 	});

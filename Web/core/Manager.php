@@ -38,6 +38,15 @@
 					);
 				}
 			}
+			else if ($type === "ADD_LINK") {
+				$node1 = $this->getNode($_POST["name1"]);
+				$node2 = $this->getNode($_POST["name2"]);
+
+				if ($node1 != null && $node2 != null) {
+					$rel = $this->addRelationship($node1, $_POST["distance"], $node2);
+					$response[] = "LINK_ADDED";
+				}
+			}
 			else if ($type === "REMOVE") {
 				$response[] = "REMOVED";
 				$node = $this->getNode($_POST["name"]);
@@ -46,8 +55,17 @@
 					$this->deleteNode($node);
 				}
 			}
+			else if ($type === "REMOVE_LINK") {
+				$response[] = "REMOVED";
+				$rel = $this->getRelationship($_POST["id"]);
+
+				if ($rel != null) {
+					$this->deleteRelationship($rel);
+				}
+			}
 			else if ($type === "REFRESH") {
 				$response[] = "REFRESHED";
+				$response[] = $this->getRelationships();
 				$response[] = $this->getNodes();
 			}
 			else {
@@ -118,5 +136,61 @@
 			}
 			
 			$node->delete();
+		}
+
+		private function addRelationship($node1, $distance, $node2) {
+			$relation = $this->neo4jClient->makeRelationship();
+			$relation->setStartNode($node1)
+					 ->setEndNode($node2)
+					 ->setType($distance)
+					 ->save();
+		}
+
+		private function getRelationship($id) {
+			$rel = null;
+
+			// somehow I can't bind an id here...
+			if (is_numeric($id)) {
+				$queryString = "MATCH (n:City)-[r]->(p:City)
+								WHERE ID(r) = " . $id . "
+								RETURN r";
+				$query = new Everyman\Neo4j\Cypher\Query($this->neo4jClient, $queryString);
+
+				$result = $query->getResultSet();
+				
+				
+				if (sizeof($result) > 0) {
+					$rel = $result[0]['r'];
+				}
+			}
+			
+			return $rel;
+		}
+
+		private function deleteRelationship($rel) {
+			$rel->delete();
+		}
+
+		private function getRelationships() {
+			$queryString = "MATCH (n:City)-[r]->(p:City) RETURN n,r,p";
+			$query = new Everyman\Neo4j\Cypher\Query($this->neo4jClient, $queryString);
+			$result = $query->getResultSet();
+			
+			$data = array();
+			
+			foreach ($result as $r) {
+				$elem = array(
+					"city1_x" => $r["n"]->getProperty("x"),
+					"city1_y" => $r["n"]->getProperty("y"),
+					"city2_x" => $r["p"]->getProperty("x"),
+					"city2_y" => $r["p"]->getProperty("y"),
+					"distance" => $r["r"]->getType(),
+					"id" => $r["r"]->getId(),
+				);
+				$data[] = $elem;
+			}
+			
+			
+			return $data;
 		}
 	}
